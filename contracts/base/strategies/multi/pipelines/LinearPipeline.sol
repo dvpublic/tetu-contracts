@@ -251,7 +251,7 @@ contract LinearPipeline is ILinearPipeline, Initializable {
   }
 
   /// @dev Returns total amount out (when we withdraw all most underlying tokens)
-  function getTotalAmountOut() internal returns (uint256) {
+  function _getTotalAmountOut() internal returns (uint256) {
     return _getAmountOut(_getMostUnderlyingBalance(), 0);
   }
 

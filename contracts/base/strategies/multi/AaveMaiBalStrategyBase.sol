@@ -75,7 +75,7 @@ contract AaveMaiBalStrategyBase is ProxyStrategyBase, LinearPipeline, IAaveMaiBa
 
   modifier updateTotalAmount() {
     _;
-    _TOTAL_AMOUNT_OUT_SLOT.set(getTotalAmountOut());
+    _TOTAL_AMOUNT_OUT_SLOT.set(_getTotalAmountOut());
   }
 
   // ************* SLOT SETTERS/GETTERS *******************
@@ -114,7 +114,13 @@ contract AaveMaiBalStrategyBase is ProxyStrategyBase, LinearPipeline, IAaveMaiBa
     }
     _rebalanceAllPipes();
     _claimFromAllPipes();
+    uint claimedUnderlying = IERC20(_underlying()).balanceOf(address(this));
     autocompound();
+    uint acAndClaimedUnderlying = IERC20(_underlying()).balanceOf(address(this));
+    uint toSupply = acAndClaimedUnderlying - claimedUnderlying;
+    if (toSupply > 0) {
+      _pumpIn(toSupply);
+    }
     liquidateRewardDefault();
   }
 
@@ -127,7 +133,7 @@ contract AaveMaiBalStrategyBase is ProxyStrategyBase, LinearPipeline, IAaveMaiBa
   function withdrawAndClaimFromPool(uint256 underlyingAmount) internal override updateTotalAmount {
     _claimFromAllPipes();
     // update cached _totalAmount, and recalculate amount
-    uint256 newTotalAmount = getTotalAmountOut();
+    uint256 newTotalAmount = _getTotalAmountOut();
     uint256 amount = underlyingAmount * newTotalAmount / _totalAmountOut();
     _pumpOutSource(amount, 0);
   }
